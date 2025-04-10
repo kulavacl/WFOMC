@@ -43,7 +43,8 @@ class WFOMCProblem(object):
             self.contain_predecessor_axiom()
 
     def contain_predecessor_axiom(self) -> bool:
-        return Pred('PRED', 2) in self.sentence.preds() or \
+        preds = self.sentence.preds()
+        return any(pred.name.startswith('PRED') for pred in preds) or \
             self.contain_circular_predecessor_axiom()
 
     def contain_circular_predecessor_axiom(self) -> bool:

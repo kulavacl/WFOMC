@@ -1,7 +1,5 @@
 from __future__ import annotations
 from logzero import logger
-
-from copy import deepcopy
 from wfomc.fol.sc2 import SC2
 from wfomc.fol.utils import new_predicate, convert_counting_formula
 
@@ -17,9 +15,9 @@ class WFOMCContext(object):
     """
     Context for WFOMC algorithm
     """
+
     def __init__(self, problem: WFOMCProblem,
                  unary_evidence_encoding: UnaryEvidenceEncoding = UnaryEvidenceEncoding.CCS):
-        problem = deepcopy(problem)
         self.problem: WFOMCProblem = problem
         self.domain: set[Const] = problem.domain
         self.sentence: SC2 = problem.sentence
@@ -40,7 +38,7 @@ class WFOMCContext(object):
         self.formula: QFFormula
         # for handling linear order axiom
         self.leq_pred: Pred = None
-        self.predecessor_pred: Pred = None
+        self.predecessor_preds: dict[int, Pred] = None
         self.circular_predecessor_pred: Pred = None
         # for handling unary evidence
         self.element2evidence: dict[Const, set[AtomicFormula]] = dict()
@@ -172,7 +170,14 @@ class WFOMCContext(object):
         if self.problem.contain_linear_order_axiom():
             self.leq_pred = Pred('LEQ', 2)
         if self.problem.contain_predecessor_axiom():
-            self.predecessor_pred = Pred('PRED', 2)
+            for pred in self.sentence.preds():
+                if pred.name.startswith('PRED'):
+                    if self.predecessor_preds is None:
+                        self.predecessor_preds = {}
+                    self.predecessor_preds[int(pred.name[4:])] = pred
         if self.problem.contain_circular_predecessor_axiom():
-            self.predecessor_pred = Pred('CIRCULAR_PRED', 2)
+            if self.predecessor_preds is None:
+                self.predecessor_preds = {
+                    1: Pred('CIRCULAR_PRED', 2)
+                }
             self.circular_predecessor_pred = Pred('CIRCULAR_PRED', 2)

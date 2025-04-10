@@ -12,7 +12,7 @@ from sympy import Poly
 from copy import deepcopy
 from wfomc.cell_graph.utils import conditional_on
 
-from wfomc.fol.syntax import AtomicFormula, Const, Pred, QFFormula, a, b, c
+from wfomc.fol.syntax import AtomicFormula, Const, Pred, QFFormula, top, a, b, c
 from wfomc.network.constraint import PartitionConstraint
 from wfomc.utils import Rational, RingElement
 from wfomc.utils.multinomial import MultinomialCoefficients
@@ -28,7 +28,7 @@ class CellGraph(object):
     def __init__(self, formula: QFFormula,
                  get_weight: Callable[[Pred], Tuple[RingElement, RingElement]],
                  leq_pred: Pred = None,
-                 predecessor_pred: Pred = None):
+                 predecessor_preds: dict[int, Pred] = None):
         """
         Cell graph that handles cells (1-types) and the WMC between them
 
@@ -40,7 +40,7 @@ class CellGraph(object):
         self.get_weight: Callable[[Pred],
                                   Tuple[RingElement, RingElement]] = get_weight
         self.leq_pred: Pred = leq_pred
-        self.predecessor_pred: Pred = predecessor_pred
+        self.predecessor_preds: dict[int, Pred] = predecessor_preds
         self.preds: Tuple[Pred] = tuple(self.formula.preds())
         logger.debug('prednames: %s', self.preds)
 
@@ -60,18 +60,40 @@ class CellGraph(object):
             self.gnd_formula_ab = self.gnd_formula_ab & \
                 self.leq_pred(b, a) & \
                 (~self.leq_pred(a, b))
-            if self.predecessor_pred is not None:
-                self.gnd_formula_cc = self.gnd_formula_cc & (~self.predecessor_pred(c, c))
-                self.gnd_formula_ab_with_pred = self.gnd_formula_ab & \
-                    self.predecessor_pred(b, a) & \
-                    (~self.predecessor_pred(a, b))
+            if self.predecessor_preds is not None:
+                self.gnd_formula_cc = self.gnd_formula_cc & \
+                    functools.reduce(
+                        lambda x, y: x & y,
+                        map(lambda x: ~x(c, c),
+                            self.predecessor_preds.values())
+                    )
+                self.gnd_formula_ab_with_preds = dict()
+                for idx, predecessor_pred in self.predecessor_preds.items():
+                    gnd_formula = self.gnd_formula_ab & \
+                        predecessor_pred(b, a) & \
+                        (~predecessor_pred(a, b))
+                    remainder_preds = list(
+                        pred for i, pred in self.predecessor_preds.items()
+                        if i != idx
+                    )
+                    gnd_formula = gnd_formula & \
+                        functools.reduce(
+                            lambda x, y: x & y,
+                            map(lambda x: ~x(b, a) & ~x(a, b),
+                                remainder_preds),
+                            top
+                        )
+                    self.gnd_formula_ab_with_preds[idx] = gnd_formula
                 self.gnd_formula_ab = self.gnd_formula_ab & \
-                    (~self.predecessor_pred(b, a)) & \
-                    (~self.predecessor_pred(a, b))
+                    functools.reduce(
+                        lambda x, y: x & y,
+                        map(lambda x: ~x(b, a) & ~x(a, b),
+                            self.predecessor_preds.values())
+                    )
         logger.info('ground a b: %s', self.gnd_formula_ab)
         logger.info('ground c: %s', self.gnd_formula_cc)
-        if self.predecessor_pred is not None:
-            logger.info(f'ground a, b with predecessor: {self.gnd_formula_ab_with_pred}')
+        if self.predecessor_preds is not None:
+            logger.info(f'ground a, b with predecessor: {self.gnd_formula_ab_with_preds}')
 
         # build cells
         self.cells: List[Cell] = self._build_cells()
@@ -84,10 +106,12 @@ class CellGraph(object):
         logger.info('computing two table weights')
         self.two_tables: Dict[Tuple[Cell, Cell],
                               TwoTable] = self._build_two_tables(self.gnd_formula_ab)
-        if self.predecessor_pred is not None:
-            self.two_tables_with_pred: Dict[Tuple[Cell, Cell],
-                                            TwoTable] = self._build_two_tables(
-                self.gnd_formula_ab_with_pred
+        if self.predecessor_preds is not None:
+            self.two_tables_with_preds: dict[
+                int, Dict[Tuple[Cell, Cell], TwoTable]
+            ] = dict(
+                (idx, self._build_two_tables(gnd_formula))
+                for idx, gnd_formula in self.gnd_formula_ab_with_preds.items()
             )
 
     def _ground_on_tuple(self, formula: QFFormula,
@@ -171,10 +195,12 @@ class CellGraph(object):
         return self.two_tables.get(cells).get_weight(evidences)
 
     @functools.lru_cache(maxsize=None, typed=True)
-    def get_two_table_with_pred_weight(self, cells: Tuple[Cell, Cell],
-                             evidences: FrozenSet[AtomicFormula] = None) -> RingElement:
+    def get_two_table_with_pred_weight(
+        self, cells: Tuple[Cell, Cell], index: int,
+        evidences: FrozenSet[AtomicFormula] = None
+    ) -> RingElement:
         self._check_existence(cells)
-        return self.two_tables_with_pred.get(cells).get_weight(evidences)
+        return self.two_tables_with_preds[index].get(cells).get_weight(evidences)
 
     def get_all_weights(self) -> Tuple[List[RingElement], List[RingElement]]:
         cell_weights = []
@@ -779,7 +805,7 @@ def build_cell_graphs(formula: QFFormula,
                       get_weight: Callable[[Pred],
                                            Tuple[RingElement, RingElement]],
                       leq_pred: Pred = None,
-                      predecessor_pred: Pred = None,
+                      predecessor_preds: dict[int, Pred] = None,
                       optimized: bool = False,
                       domain_size: int = 0,
                       modified_cell_symmetry: bool = False,
@@ -790,7 +816,7 @@ def build_cell_graphs(formula: QFFormula,
         logger.info('No nullary atoms found, building a single cell graph')
         if not optimized:
             yield CellGraph(
-                formula, get_weight, leq_pred, predecessor_pred
+                formula, get_weight, leq_pred, predecessor_preds
             ), Rational(1, 1)
         else:
             if partition_constraint is None:
@@ -812,7 +838,7 @@ def build_cell_graphs(formula: QFFormula,
                 continue
             if not optimized:
                 cell_graph = CellGraph(
-                    subs_formula, get_weight, leq_pred, predecessor_pred
+                    subs_formula, get_weight, leq_pred, predecessor_preds
                 )
             else:
                 if partition_constraint is None:
