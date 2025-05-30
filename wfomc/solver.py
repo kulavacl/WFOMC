@@ -28,9 +28,21 @@ def wfomc(problem: WFOMCProblem, algo: Algo = Algo.STANDARD) -> Rational:
         if algo != Algo.INCREMENTAL and algo != Algo.RECURSIVE:
             raise RuntimeError("Linear order axiom is only supported by the "
                                "incremental and recursive WFOMC algorithms")
-
+        logger.info('By default, linear order is not fixed')
+    if problem.contain_predecessor_axiom():
+        logger.info('Predecessor predicate PRED is found')
+        if algo != Algo.INCREMENTAL:
+            raise RuntimeError("Predecessor axiom is only supported by the "
+                               "incremental WFOMC algorithm")
+    if problem.contain_successor_axiom():
+        logger.info("Successor axiom SUC is found")
+        if algo != Algo.INCREMENTAL:
+            raise RuntimeError("Successor axiom is only supported by the "
+                               "incremental WFOMC algorithm")
+    if problem.contain_successor_axiom() and not problem.contain_linear_order_axiom():
+        raise RuntimeError("Successor axiom is only supported in addition "
+                           "to the linear order axiom")
     logger.info(f'Invoke WFOMC with {algo} algorithm')
-
     context = WFOMCContext(problem)
     with Timer() as t:
         if algo == Algo.STANDARD:
@@ -40,7 +52,7 @@ def wfomc(problem: WFOMCProblem, algo: Algo = Algo.STANDARD) -> Rational:
         elif algo == Algo.FASTv2:
             res = fast_wfomc(context, True)
         elif algo == Algo.INCREMENTAL:
-            res = incremental_wfomc(context)
+            res = incremental_wfomc(context, t)
         elif algo == Algo.RECURSIVE:
             res = recursive_wfomc(context)
     res = context.decode_result(res)
@@ -75,7 +87,6 @@ if __name__ == '__main__':
     else:
         logzero.loglevel(logging.INFO)
     logzero.logfile('{}/log.txt'.format(args.output_dir), mode='w')
-
     with Timer() as t:
         problem = parse_input(args.input)
     logger.info('Parse input: %ss', t)

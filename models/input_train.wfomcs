@@ -1,0 +1,21 @@
+\forall X: (V(X) | VR(X)) & 
+\forall X: (~V(X) | ~VR(X)) & 
+
+\forall X: (\forall Y:  ((SUC(X, Y) & LEQ(X, Y) & V(X)) -> ~R(X))) & 
+\forall X: (\forall Y:  ((SUC(X, Y) & LEQ(Y, X) & V(X)) -> R(X))) &  
+\forall X: (\forall Y:  ((SUC(X, Y) & LEQ(X, Y) & VR(X)) -> R(X))) & 
+\forall X: (\forall Y:  ((SUC(X, Y) & LEQ(Y, X) & VR(X)) -> ~R(X))) & 
+
+\forall X: (\forall Y: ((R(X) & V(X) & SUC(X, Y)) -> VR(Y))) & 
+\forall X: (\forall Y: ((~R(X) & V(X) & SUC(X, Y)) -> V(Y))) & 
+\forall X: (\forall Y: ((R(X) & VR(X) & SUC(X, Y)) -> V(Y))) & 
+\forall X: (\forall Y: ((~R(X) & VR(X) & SUC(X, Y)) -> VR(Y))) & 
+
+\forall X: (FIRST(X) -> (V(X) & ~R(X))) & 
+\forall X: (\forall Y: (FIRST(X) -> ~SUC(X, Y))) & 
+\forall X: (LAST(X) -> (V(X) & ~R(X))) & 
+\forall X: (\forall Y: (LAST(X) -> ~SUC(Y, X))) 
+Domain = 8
+
+|R| <= 2 
+
