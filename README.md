@@ -43,6 +43,17 @@ vertices = 5
 |E| = 30 # 2n + 2m where n = 5, m = 10
 ```
 
+### Use successor constraint
+
+To use successor constraint alongside linear order constraint (or linear order axiom), just use the predefined predicates `SUC` in the input file. 
+An example could be
+```
+\forall X: (\forall Y: (q(X, Y) -> SUC(X, Y))) &  
+\forall X: (\forall Y: ((SUC(X, Y) & LEQ(X, Y)) -> q(X, Y))) 
+
+V = 4
+```
+
 
 ### Example input file
 
@@ -113,7 +124,7 @@ $ pip install -e .
 
 ### How to use
 ```
-$ python sampling_fo2/wfomc.py -i [input] -a [algo]
+$ python wfomc/solver.py -i [input] -a [algo]
 ```
 
 ## References
