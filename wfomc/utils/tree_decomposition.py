@@ -17,6 +17,7 @@ class TD_binary_evidence:
             node = q[0]
             q.pop(0)
             node.separate_self()
+            q.extend(node.children)
         
         q.append(self.root)
         while len(q) > 0:
@@ -24,9 +25,29 @@ class TD_binary_evidence:
             q.pop(0)
             node.create_child()
             node.combine_children()
+            q.extend(node.children)
         
     def print(self):
         self.root.print()
+
+    def verify_niceness(self):
+        q = []
+        q.append(self.root)
+        while len(q) > 0:
+            node = q[0]
+            q.pop(0)
+            if len(node.children) > 2:
+                raise(RuntimeError(f"Node {node.bag} has too many children!"))
+            if len(node.children) == 2:
+                if len(node.bag - (node.children[0].bag | node.children[1].bag)) > 0 or \
+                    len((node.children[0].bag | node.children[1].bag) - node.bag) > 0:
+                    raise(RuntimeError(f"Join node {node.bag} is not union of its children!"))
+            if len(node.children) == 1:
+                if len(node.bag - (node.children[0].bag)) > 0 or \
+                    len((node.children[0].bag) - node.bag) != 1:
+                    raise(RuntimeError(f"Separator node {node.bag} does not have exactly one element less than its child!"))
+            q.extend(node.children)
+        print("Niceness verified.")
 
 
 class TDNode:
@@ -43,7 +64,7 @@ class TDNode:
         child_bag = copy(self.bag)
         for child in self.children:
             child_bag = child_bag - child.bag
-        if len(child_bag):
+        if len(child_bag) > 0:
             self.children.append(TDNode(child_bag, self))
 
     #separate elements from self
@@ -68,7 +89,7 @@ class TDNode:
 
     #combine children if there is too many
     def combine_children(self):
-        if len(self.children) < 2:
+        if len(self.children) <= 2:
             return
         child_bag = set()
         for child in self.children[1:]:
@@ -86,11 +107,11 @@ class TDNode:
             child.print(offset + 1)
 
 if __name__ == "__main__":
-    node1 = TDNode(set(3, 4, 5), None)
+    node1 = TDNode(set((3, 4, 5)), None)
     node2 = TDNode(set((2, 4, 5)), node1)
     node3 = TDNode(set((1, 5)), node1)
-    node4 = TDNode(set((0, 1, 5), node3))
-    node5 = TDNode(set((7, 9), node2))
+    node4 = TDNode(set((0, 1, 5)), node3)
+    node5 = TDNode(set((7, 9)), node2)
     node1.children = [node2, node3]
     node2.children = [node5]
     node3.children = [node4]
@@ -99,3 +120,4 @@ if __name__ == "__main__":
     bin_ev.print()
     bin_ev.be_nice()
     bin_ev.print()
+    bin_ev.verify_niceness()
