@@ -1,3 +1,0 @@
-\forall X: (\forall Y: (q(X, Y) <-> SUC(X, Y))) &
-\forall X: (\forall Y: (LEQ(X, Y) | LEQ(Y, X)))
-V = 5

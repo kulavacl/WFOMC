@@ -19,6 +19,11 @@ function_free_logic_grammar = r"""
     ?term: constant
         | variable
 
+    unary_evidence: unary_literal* ("," unary_literal)*
+    ?unary_literal: atomic_ffl | negation
+
+    p_structure: left_square_bracket predicates right_square_bracket
+
     left_square_bracket: "["
     right_square_bracket: "]"
     left_parenthesis: "("
@@ -44,7 +49,7 @@ function_free_logic_grammar = r"""
     ge: ">="
     lt: "<"
     gt: ">"
-    LCASE_CNAME: LCASE_LETTER ("_"|LCASE_LETTER|DIGIT)*
+    LCASE_CNAME: LCASE_LETTER ("_"|LCASE_LETTER|UCASE_LETTER|DIGIT)*
 
     %import common.LCASE_LETTER
     %import common.UCASE_LETTER

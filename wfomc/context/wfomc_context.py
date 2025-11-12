@@ -19,8 +19,10 @@ class WFOMCContext(object):
         self.problem: WFOMCProblem = problem
         self.domain: set[Const] = problem.domain
         self.sentence: SC2 = problem.sentence
+        self.evidence: set[AtomicFormula] = problem.evidence
         self.weights: dict[Pred, tuple[Rational, Rational]] = problem.weights
         self.cardinality_constraint: CardinalityConstraint = problem.cardinality_constraint
+        self.closed_world: set[Pred] = problem.closed_world
         self.repeat_factor = 1
 
         logger.info('sentence: \n%s', self.sentence)

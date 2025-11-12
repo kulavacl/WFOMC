@@ -1,0 +1,4 @@
+\forall X: (A(X) -> (\forall Y: (Q(X, Y) -> B(Y)) | \forall Y: (Q(Y, X) -> B(Y)))) &
+\forall X: (~Q(X, Y))
+
+V= 4

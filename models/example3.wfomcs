@@ -1,8 +1,0 @@
-#OEIS A000629 if LEQ is fixed
-
-\forall X: (\forall Y: ((P(X) & SUC(X, Y) & LEQ(X, Y))-> P(Y))) &
-\forall X: (\forall Y: ((~P(X) & SUC(X, Y) & LEQ(X, Y))-> ~P(Y))) &
-\forall X: (\forall Y: ((P(X) & SUC(Y, X) & LEQ(Y, X))-> P(Y))) &
-\forall X: (\forall Y: ((~P(X) & SUC(Y, X) & LEQ(Y, X))-> ~P(Y)))
-V = 5
-

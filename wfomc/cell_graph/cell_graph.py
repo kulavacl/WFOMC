@@ -181,8 +181,9 @@ class CellGraph(object):
         cell_str = [str(cell) for cell in self.cells]
         cell_weight_df = pd.DataFrame(cell_weight_df, index=None,
                                       columns=['Cell', 'Weight'])
-        twotable_weight_df = pd.DataFrame(twotable_weight_df, index=cell_str,
-                                          columns=cell_str)
+        #twotable_weight_df = pd.DataFrame(twotable_weight_df, index=cell_str,
+        twotable_weight_df = pd.DataFrame(twotable_weight_df, index=range(len(cell_str)),
+                                          columns=range(len(cell_str)))
         
         s += 'cell weights: \n'
         s += cell_weight_df.to_markdown() + '\n'
@@ -325,6 +326,7 @@ class CellGraph(object):
                 # NOTE: leq is sensitive to the order of cells
                 if i > j and self.leq_pred is None:
                     tables[(cell, other_cell)] = tables[(other_cell, cell)]
+                    #continue
                 models_2 = conditional_on(models_1, gnd_lits,
                                           other_cell.get_evidences(b))
                 tables[(cell, other_cell)] = TwoTable(
@@ -573,7 +575,8 @@ def build_cell_graphs(formula: QFFormula,
                       domain_size: int = 0,
                       modified_cell_symmetry: bool = False, 
                       first_pred: Pred = None,
-                      last_pred: Pred = None) \
+                      last_pred: Pred = None,
+                      evidence: Dict = None) \
         -> Generator[tuple[CellGraph, RingElement]]:
     nullary_atoms = [atom for atom in formula.atoms() if atom.pred.arity == 0]
     if len(nullary_atoms) == 0:

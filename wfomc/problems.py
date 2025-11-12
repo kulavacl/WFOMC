@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from wfomc.fol.sc2 import SC2, to_sc2
-from wfomc.fol.syntax import Const, Pred, top, AUXILIARY_PRED_NAME, \
+from wfomc.fol.syntax import AtomicFormula, Const, Pred, top, AUXILIARY_PRED_NAME, \
     Formula, QuantifiedFormula, Universal, Equivalence
 from wfomc.fol.utils import new_predicate
 from wfomc.network.constraint import CardinalityConstraint
@@ -18,11 +18,24 @@ class WFOMCProblem(object):
     def __init__(self, sentence: SC2,
                  domain: set[Const],
                  weights: dict[Pred, tuple[Rational, Rational]],
-                 cardinality_constraint: CardinalityConstraint = None):
+                 cardinality_constraint: CardinalityConstraint = None,
+                 evidence: set[AtomicFormula] = None,
+                 closed_world: set[Pred] = None):
         self.domain: set[Const] = domain
         self.sentence: SC2 = sentence
         self.weights: dict[Pred, tuple[Rational, Rational]] = weights
         self.cardinality_constraint: CardinalityConstraint = cardinality_constraint
+        self.evidence = evidence
+        self.closed_world = closed_world
+        if self.evidence is not None:
+            for atom in self.evidence:
+                if any(arg not in self.domain for arg in atom.args):
+                    raise ValueError(f'Evidence must be consistent with the domain: some of {atom.args} not in {self.domain}.')
+            for atom in self.evidence:
+                if ~atom in self.evidence:
+                    raise ValueError(f'Evidence must be consistent (no negated evidence): {atom} and {~atom} both present.')
+        #if is_binary and is_unary:
+            #raise RuntimeError(f"Evidence cannot be unary and binary at the same time! (it can, just not yet)")   
 
     def contain_linear_order_axiom(self) -> bool:
         return Pred('PRED', 2) in self.sentence.preds() or \
@@ -39,6 +52,9 @@ class WFOMCProblem(object):
     
     def contain_last_predicate(self) -> bool:
         return Pred('LAST', 1) in self.sentence.preds()
+    
+    def contain_unary_evidence(self) -> bool:
+        return self.evidence is not None and len(self.evidence) > 0
 
     def __str__(self) -> str:
         s = ''

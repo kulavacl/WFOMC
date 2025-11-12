@@ -1,4 +1,0 @@
-\forall X: (\forall Y: ((A(X) & LEQ(X, Y)) -> A(Y))) &
-\forall X: (\forall Y: ((A(X) & SUC(X, Y)) -> B(Y)))
-
-V = 10

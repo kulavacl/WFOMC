@@ -1,6 +1,0 @@
-\forall X: (\forall Y: ((A(X) & LEQ(X, Y)) -> A(Y))) &
-\forall X: (\forall Y: ((A(X) & SUC(X, Y)) -> B(Y))) &
-\forall X: (\forall Y: (R(X, Y) -> (A(X) & B(Y))))
-
-V = 9
-
