@@ -64,8 +64,6 @@ class WFOMSTransformer(FOLTransformer, CCTransfomer):
         domain = args[1][1]
         weightings = args[2]
         cardinality_constraints = args[3]
-        unary_evidence = args[4]
-        p_structure = args[5]
         try:
             sentence = to_sc2(sentence)
         except:
@@ -86,7 +84,7 @@ class WFOMSTransformer(FOLTransformer, CCTransfomer):
         else:
             cardinality_constraint = None
 
-        return sentence, domain, weightings, cardinality_constraint, unary_evidence, p_structure
+        return sentence, domain, weightings, cardinality_constraint
 
 
 def parse(text: str) -> \
@@ -101,9 +99,7 @@ def parse(text: str) -> \
         sentence,
         domain,
         weightings,
-        cardinality_constraint,
-        unary_evidence,
-        p_structure
+        cardinality_constraint
     ) = WFOMSTransformer().transform(tree)
     pred_weightings = dict(
         (sentence.pred_by_name(pred), weights)
@@ -113,9 +109,7 @@ def parse(text: str) -> \
         sentence,
         domain,
         pred_weightings,
-        cardinality_constraint,
-        unary_evidence,
-        p_structure
+        cardinality_constraint
     )
 
 

@@ -117,22 +117,6 @@ class FOLTransformer(Transformer):
     def predicates(self, args):
         return list(args)
 
-    def unary_evidence(self, args):
-        lits = set(args)
-        for lit in lits:
-            if len(lit.vars()) > 0:
-                raise ValueError(f"Evidence must be ground: {lit}")
-            if lit.pred.arity != 1 and lit.pred.arity != 2:
-                raise ValueError(f"Evidence only supports unary or binary predicates for now: {lit}")
-        return lits
-    
-    def p_structure(self, args):
-        preds = set(self.name2pred[pred] for pred in args[1])
-        for pred in preds:
-            if pred.arity != 2:
-                raise ValueError(f"Only binary predicates can be closed world: {pred}")
-        return preds
-
 
 def parse(text: str) -> Formula:
     fol_parser = Lark(function_free_logic_grammar, start='ffl')

@@ -7,10 +7,9 @@ import logzero
 
 from logzero import logger
 from contexttimer import Timer
-from wfomc.network.constraint import UnaryEvidenceEncoding
 
 from wfomc.problems import WFOMCProblem
-from wfomc.algo import Algo, standard_wfomc, fast_wfomc, incremental_wfomc, recursive_wfomc, td_wfomc
+from wfomc.algo import Algo, standard_wfomc, fast_wfomc, incremental_wfomc, recursive_wfomc
 
 from wfomc.utils import MultinomialCoefficients, Rational, round_rational
 from wfomc.context import WFOMCContext
@@ -56,8 +55,6 @@ def wfomc(problem: WFOMCProblem, algo: Algo = Algo.STANDARD) -> Rational:
             res = incremental_wfomc(context, t)
         elif algo == Algo.RECURSIVE:
             res = recursive_wfomc(context)
-        elif algo == Algo.TREE_DECOMP:
-            res = td_wfomc(context)
     res = context.decode_result(res)
     logger.info('WFOMC time: %s', t.elapsed)
     return res
