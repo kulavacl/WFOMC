@@ -337,3 +337,5 @@ def incremental_wfomc(context: WFOMCContext, t) -> RingElement:
     if leq_pred is not None:
             res *= Rational(math.factorial(domain_size), 1)
     return res
+
+#
